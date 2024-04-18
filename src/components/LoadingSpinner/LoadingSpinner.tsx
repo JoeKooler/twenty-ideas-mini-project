@@ -1,3 +1,4 @@
+// [TODO] Add props for more customizable component
 const LoadingSpinner = () => {
   return (
     <svg
@@ -12,7 +13,7 @@ const LoadingSpinner = () => {
         cy="12"
         r="10"
         stroke="blue"
-        stroke-width="4"
+        strokeWidth="4"
       ></circle>
       <path
         className="opacity-75"

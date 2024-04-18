@@ -7,6 +7,9 @@ type PokeCardsProps = {
   ids: string[];
 };
 
+/**
+ * A PokeCard List with grid layout
+ */
 const PokeCards = ({ ids }: PokeCardsProps) => {
   const { data, isLoading } = useGetShowingPokemons(ids);
 

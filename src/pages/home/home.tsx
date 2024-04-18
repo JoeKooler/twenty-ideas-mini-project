@@ -17,7 +17,7 @@ const HomePage = () => {
   } = useHome(data);
 
   if (!data) {
-    return <div>Loading ...</div>;
+    return <div></div>;
   }
 
   return (

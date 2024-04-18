@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getPokemonById } from '../../requests/getPokemonById';
 import { PokemonInfoAPIResponse } from '../../types/PokemonInfoAPIResponse';
+import { daysToMs } from '../../utils/time';
 
 const useGetShowingPokemons = (ids: string[]) => {
   const queryFn = async () => {
@@ -12,6 +13,7 @@ const useGetShowingPokemons = (ids: string[]) => {
   return useQuery<PokemonInfoAPIResponse[]>({
     queryKey: ['pokemons', ids],
     queryFn,
+    staleTime: daysToMs(1),
     enabled: !!ids.length,
   });
 };
