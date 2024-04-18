@@ -49,6 +49,15 @@ const sortByName = (fullData?: PokemonAPIResponse) => {
   return { ...fullData, results: newResult };
 };
 
+const cleanSortBy = (querySortBy?: string | null) => {
+  if (!querySortBy) return 'name';
+
+  if (querySortBy === 'name' || querySortBy === 'id') {
+    return querySortBy;
+  }
+  return 'name';
+};
+
 const useHome = (data?: PokemonAPIResponse) => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [displayingData, setDisplayingData] = useState<PokemonInfo[]>();
@@ -58,20 +67,12 @@ const useHome = (data?: PokemonAPIResponse) => {
 
   const [, setSearchParams] = useSearchParams();
 
+  //Won't memo until it's too slow
   const nameSortedData = sortByName(data);
 
   const handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchParams({ page: `${currentPage}`, sortBy: event.target.value });
     setSortOption(event.target.value as SortOptionState);
-  };
-
-  const cleanSortBy = (querySortBy?: string | null) => {
-    if (!querySortBy) return 'name';
-
-    if (querySortBy === 'name' || querySortBy === 'id') {
-      return querySortBy;
-    }
-    return 'name';
   };
 
   useEffect(() => {
@@ -98,6 +99,7 @@ const useHome = (data?: PokemonAPIResponse) => {
   }, [searchParam, data, currentPage, sortOption]);
 
   const ids = displayingData?.map((datum) => datum.id || '') ?? [];
+
   const maxPage = Math.floor(
     (data?.results?.length || 0) / MAX_POKEMON_DISPLAY
   );

@@ -1,17 +1,22 @@
 import useGetShowingPokemons from '../../hooks/queries/useGetShowingPokemons';
 import { firstLetterToUpperCase } from '../../utils/string';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import PokeCard from './PokeCard';
 
 type PokeCardsProps = {
   ids: string[];
 };
 
-// const MAX_POKEMON_DISPLAY = 12;
-
 const PokeCards = ({ ids }: PokeCardsProps) => {
   const { data, isLoading } = useGetShowingPokemons(ids);
 
-  if (isLoading) return <h1>Loading...</h1>;
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex justify-center items-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
   if (!data) return <></>;
 
   return (
