@@ -49,6 +49,12 @@ const sortByName = (fullData?: PokemonAPIResponse) => {
   return { ...fullData, results: newResult };
 };
 
+const cleanPageQuery = (queryPage?: string | null) => {
+  if (!queryPage || isNaN(parseInt(queryPage))) return 0;
+
+  return parseInt(queryPage);
+};
+
 const cleanSortBy = (querySortBy?: string | null) => {
   if (!querySortBy) return 'name';
 
@@ -76,14 +82,13 @@ const useHome = (data?: PokemonAPIResponse) => {
   };
 
   useEffect(() => {
-    const queryCurrentPage = searchParam.get('page');
+    const queryCurrentPage = cleanPageQuery(searchParam.get('page'));
     const sortBy = cleanSortBy(searchParam.get('sortBy'));
 
     setSortOption(sortBy);
 
-    if (queryCurrentPage && data) {
-      const parsedPage = parseInt(queryCurrentPage);
-      setCurrentPage(parsedPage);
+    if (data) {
+      setCurrentPage(queryCurrentPage);
       const MAP = {
         id: data,
         name: nameSortedData,
@@ -91,7 +96,7 @@ const useHome = (data?: PokemonAPIResponse) => {
 
       const parsedPokemon = pokemonAPIResponseAdapter(
         MAP[sortOption] ?? data,
-        parsedPage
+        queryCurrentPage
       );
 
       setDisplayingData(parsedPokemon);
