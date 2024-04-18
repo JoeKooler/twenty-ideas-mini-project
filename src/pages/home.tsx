@@ -4,6 +4,7 @@ import PokeCards from '../components/PokeCards';
 import useSearchQuery from '../hooks/routers/useSearchQuery';
 import { PokemonAPIResponse } from '../types/PokemonAPIResponse';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { QueryClient, useQueryClient } from '@tanstack/react-query';
 
 type PokemonInfo = {
   id: string;
@@ -36,16 +37,37 @@ const pokemonAPIResponseAdapter = (
   return result;
 };
 
+const sortByName = (fullData?: PokemonAPIResponse) => {
+  if (!fullData) return;
+
+  // Hacky array shallow clone
+  const newResult = fullData.results.slice();
+
+  // Strangely the .sort mutate the original array :(
+  // Let's leave it like this
+  newResult.sort((a, b) => {
+    return a.name > b.name ? 1 : -1;
+  });
+
+  return { ...fullData, results: newResult };
+};
+
 const HomePage = () => {
   const { data, isLoading } = useGetAllPokemon();
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [displayingData, setDisplayingData] = useState<PokemonInfo[]>();
   const [sortOption, setSortOption] = useState<SortOptionState>('name');
 
+  const queryClient = useQueryClient();
+
   const searchParam = useSearchQuery();
+
+  console.log('Data ', data);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const nameSortedData = sortByName(data);
 
   const handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchParams({ page: `${currentPage}`, sortBy: event.target.value });
@@ -57,11 +79,19 @@ const HomePage = () => {
     if (queryCurrentPage && data) {
       const parsedPage = parseInt(queryCurrentPage);
       setCurrentPage(parsedPage);
+      const MAP = {
+        id: data,
+        name: nameSortedData,
+      };
 
-      const parsedPokemon = pokemonAPIResponseAdapter(data, parsedPage);
+      const parsedPokemon = pokemonAPIResponseAdapter(
+        MAP[sortOption] ?? data,
+        parsedPage
+      );
+
       setDisplayingData(parsedPokemon);
     }
-  }, [searchParam, data, currentPage]);
+  }, [searchParam, data, currentPage, sortOption]);
 
   console.log('Search ', searchParam.get('page'));
   console.log('Search ', searchParam.get('sortBy'));
