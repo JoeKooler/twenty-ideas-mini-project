@@ -1,5 +1,5 @@
 import PokeCard from '../components/PokeCard';
-import useGetShowingPokemons from '../hooks/query/useGetShowingPokemons';
+import useGetShowingPokemons from '../hooks/queries/useGetShowingPokemons';
 import { firstLetterToUpperCase } from '../utils/string';
 
 type PokeCardsProps = {

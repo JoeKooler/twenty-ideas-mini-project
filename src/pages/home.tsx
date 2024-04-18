@@ -1,27 +1,92 @@
 import { useEffect, useState } from 'react';
-import PokeCard from '../components/PokeCard';
-import { useGetAllPokemon } from '../hooks/query/useGetAllPokemon';
+import { useGetAllPokemon } from '../hooks/queries/useGetAllPokemon';
 import PokeCards from '../components/PokeCards';
+import useSearchQuery from '../hooks/routers/useSearchQuery';
+import { PokemonAPIResponse } from '../types/PokemonAPIResponse';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 type PokemonInfo = {
   id: string;
   name: string;
-  spriteUri: string;
 };
 
-type SortOptionState = 'SORT_NAME' | 'SORT_ID';
+type SortOptionState = 'name' | 'id';
 
 const MAX_POKEMON_DISPLAY = 12;
 
-const HomePage = () => {
-  const { data: allPokemons, isLoading: allPokemonsLoading } =
-    useGetAllPokemon();
+const pokemonAPIResponseAdapter = (
+  fullData: PokemonAPIResponse,
+  page: number
+) => {
+  const SLICE_INDEX = MAX_POKEMON_DISPLAY * page;
+  const slicedPokemon = fullData.results.slice(
+    SLICE_INDEX,
+    SLICE_INDEX + MAX_POKEMON_DISPLAY
+  );
 
-  const [sortOption, setSortOption] = useState<SortOptionState>('SORT_NAME');
+  const result = slicedPokemon.map((pokemon) => {
+    const splitedURL = pokemon.url.split('/');
+    const extractedId = splitedURL[splitedURL.length - 2];
+    return {
+      id: extractedId,
+      name: pokemon.name,
+    };
+  });
+
+  return result;
+};
+
+const HomePage = () => {
+  const { data, isLoading } = useGetAllPokemon();
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [displayingData, setDisplayingData] = useState<PokemonInfo[]>();
+  const [sortOption, setSortOption] = useState<SortOptionState>('name');
+
+  const searchParam = useSearchQuery();
+
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchParams({ page: `${currentPage}`, sortBy: event.target.value });
     setSortOption(event.target.value as SortOptionState);
   };
+
+  useEffect(() => {
+    const queryCurrentPage = searchParam.get('page');
+    if (queryCurrentPage && data) {
+      const parsedPage = parseInt(queryCurrentPage);
+      setCurrentPage(parsedPage);
+
+      const parsedPokemon = pokemonAPIResponseAdapter(data, parsedPage);
+      setDisplayingData(parsedPokemon);
+    }
+  }, [searchParam, data, currentPage]);
+
+  console.log('Search ', searchParam.get('page'));
+  console.log('Search ', searchParam.get('sortBy'));
+
+  const ids = displayingData?.map((datum) => datum.id || '') ?? [];
+  const maxPage = Math.floor(
+    (data?.results?.length || 0) / MAX_POKEMON_DISPLAY
+  );
+  console.log('Max ', currentPage >= maxPage);
+
+  const goNext = () => {
+    searchParam.set('page', `${currentPage + 1}`);
+    setSearchParams({ page: `${currentPage + 1}`, sortBy: sortOption });
+    setCurrentPage((p) => p + 1);
+  };
+
+  const goBack = () => {
+    searchParam.set('page', `${currentPage - 1}`);
+    setSearchParams({ page: `${currentPage - 1}`, sortBy: sortOption });
+    setCurrentPage((p) => p - 1);
+  };
+
+  if (!data) {
+    return <div>Loading ...</div>;
+  }
 
   return (
     <>
@@ -32,8 +97,8 @@ const HomePage = () => {
             <label className="flex px-4 py-[0.625rem]">
               <input
                 type="radio"
-                value="SORT_NAME"
-                checked={sortOption === 'SORT_NAME'}
+                value="name"
+                checked={sortOption === 'name'}
                 onChange={(e) => handleOptionChange(e)}
               />
               <div className="pl-4" />
@@ -43,8 +108,8 @@ const HomePage = () => {
             <label className="flex px-4 py-[0.625rem]">
               <input
                 type="radio"
-                value="SORT_ID"
-                checked={sortOption === 'SORT_ID'}
+                value="id"
+                checked={sortOption === 'id'}
                 onChange={(e) => handleOptionChange(e)}
               />
               <div className="pl-4" />
@@ -52,18 +117,33 @@ const HomePage = () => {
             </label>
           </div>
         </div>
-        <PokeCards
-          ids={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']}
-        />
+        <div>
+          <PokeCards ids={ids} />
+        </div>
 
         <div className="w-full flex flex-grow items-end">
           <div className="flex w-full justify-between">
-            <button className="px-3 py-2 border-[1px] border-[rgba(2,78,116,1)] text-[rgba(2,78,116,1)] rounded">
-              Previous 12
-            </button>
-            <button className="px-3 py-2 border-[1px] border-[rgba(2,78,116,1)] text-[rgba(2,78,116,1)] rounded">
-              Next 12
-            </button>
+            {currentPage > 0 ? (
+              <button
+                className="px-3 py-2 border-[1px] border-[rgba(2,78,116,1)] text-[rgba(2,78,116,1)] rounded"
+                onClick={() => goBack()}
+              >
+                Previous {MAX_POKEMON_DISPLAY}
+              </button>
+            ) : (
+              <div></div>
+            )}
+
+            {currentPage < maxPage ? (
+              <button
+                className="px-3 py-2 border-[1px] border-[rgba(2,78,116,1)] text-[rgba(2,78,116,1)] rounded"
+                onClick={() => goNext()}
+              >
+                Next {MAX_POKEMON_DISPLAY}
+              </button>
+            ) : (
+              <div></div>
+            )}
           </div>
         </div>
       </div>
