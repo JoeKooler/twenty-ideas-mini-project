@@ -4,6 +4,7 @@ import useSearchQuery from '../../hooks/routers/useSearchQuery';
 import { useSearchParams } from 'react-router-dom';
 
 const MAX_POKEMON_DISPLAY = 12;
+const DEFAULT_SORT_BY = 'id';
 
 type PokemonInfo = {
   id: string;
@@ -56,18 +57,19 @@ const cleanPageQuery = (queryPage?: string | null) => {
 };
 
 const cleanSortBy = (querySortBy?: string | null) => {
-  if (!querySortBy) return 'name';
+  if (!querySortBy) return DEFAULT_SORT_BY;
 
   if (querySortBy === 'name' || querySortBy === 'id') {
     return querySortBy;
   }
-  return 'name';
+  return DEFAULT_SORT_BY;
 };
 
 const useHome = (data?: PokemonAPIResponse) => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [displayingData, setDisplayingData] = useState<PokemonInfo[]>();
-  const [sortOption, setSortOption] = useState<SortOptionState>('name');
+  const [sortOption, setSortOption] =
+    useState<SortOptionState>(DEFAULT_SORT_BY);
 
   const searchParam = useSearchQuery();
 
@@ -89,6 +91,7 @@ const useHome = (data?: PokemonAPIResponse) => {
 
     if (data) {
       setCurrentPage(queryCurrentPage);
+
       const MAP = {
         id: data,
         name: nameSortedData,
